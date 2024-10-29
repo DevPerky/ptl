@@ -10,8 +10,8 @@ struct ptl_array_info {
 
 void *ptl_array_push(void *dest, const void *src, struct ptl_array_info *info);
 
-#define PTL_ARRAY_INIT(VAR)                                                    \
-    { .info.elem_size = sizeof(VAR.elems[0]) }
+#define PTL_ARRAY_INIT(TAG)                                                    \
+    { .info.elem_size = sizeof(((struct TAG *)0)->elems[0]) }
 
 #define PTL_TEMPLATE_ARRAY(TYPE, TAG)                                          \
     struct TAG {                                                               \
@@ -19,9 +19,10 @@ void *ptl_array_push(void *dest, const void *src, struct ptl_array_info *info);
         TYPE *elems;                                                           \
     };                                                                         \
     static inline struct TAG TAG(void) {                                       \
-        return (struct TAG){.info.elem_size =                                  \
-                                sizeof((struct TAG *)0)->elems[0]};            \
-    } static inline void TAG##_push(struct TAG *array, const TYPE *elem) {     \
+        return (struct TAG)PTL_ARRAY_INIT(TAG);                                \
+    }                                                                          \
+                                                                               \
+    static inline void TAG##_push(struct TAG *array, const TYPE *elem) {       \
         array->elems = ptl_array_push(array->elems, elem, &array->info);       \
     }
 
